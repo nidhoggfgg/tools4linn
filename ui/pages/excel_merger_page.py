@@ -188,7 +188,7 @@ class ExcelMergerPage(ctk.CTkFrame):
 
         self.naming_menu = ctk.CTkOptionMenu(
             naming_frame,
-            values=["文件名", "目录名", "索引编号", "路径段"],
+            values=["文件名", "目录名", "索引编号", "路径段", "第一层目录名"],
             variable=self.naming_strategy,
             width=200,
             height=35,
@@ -380,8 +380,6 @@ class ExcelMergerPage(ctk.CTkFrame):
             naming_strategy=self.naming_strategy.get(),
             filter_enabled=filter_enabled,
             pattern=pattern,
-            min_size_mb=min_size_mb,
-            max_size_mb=max_size_mb,
         )
 
     def _on_progress_update(self, progress: float, message: str):

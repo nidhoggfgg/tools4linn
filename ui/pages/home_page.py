@@ -43,8 +43,7 @@ class HomePage(ctk.CTkFrame):
 
         # 描述文本
         description_text = """
-        Tools4Linn 为您提供了一系列实用的桌面工具，帮助您提高工作效率。
-        所有工具都经过精心设计，具有现代化的用户界面和直观的操作体验。
+        Tools4Linn 全称 tools for linn，是一个专为 linn 设计并开发的工具集，主要用于自动化处理。
         """
 
         description_label = ctk.CTkLabel(

@@ -16,6 +16,7 @@ from toolkits.utils.naming import (
     INDEXED_STRATEGY,
     LAST_TWO_SEGMENTS_STRATEGY,
     NamingStrategy,
+    PathSegmentsStrategy,
 )
 from toolkits.utils.file_filter import (
     NamePatternStrategy,
@@ -110,13 +111,19 @@ class ExcelMergerController:
 
         return True, ""
 
-    def get_naming_strategy(self, strategy_name: str) -> NamingStrategy:
+    def get_naming_strategy(
+        self, strategy_name: str, input_dir: Optional[str]
+    ) -> NamingStrategy:
         """获取命名策略"""
+        if input_dir is not None:
+            cwd = Path(input_dir)
+        else:
+            cwd = None
         strategy_map = {
             "文件名": FILENAME_STRATEGY,
             "目录名": DIRECTORY_STRATEGY,
             "索引编号": INDEXED_STRATEGY,
-            "路径段": LAST_TWO_SEGMENTS_STRATEGY,
+            "第一层目录名": PathSegmentsStrategy(segments=[0], cwd=cwd),
         }
         return strategy_map.get(strategy_name, FILENAME_STRATEGY)
 
@@ -124,39 +131,16 @@ class ExcelMergerController:
         self,
         enabled: bool,
         pattern: str = "",
-        min_size_mb: Optional[float] = None,
-        max_size_mb: Optional[float] = None,
     ) -> Optional[FileFilterStrategy]:
-        """获取文件过滤策略"""
         if not enabled:
             return None
 
-        strategies = []
-
-        # 文件名模式过滤
         if pattern.strip():
             try:
-                strategies.append(NamePatternStrategy(pattern.strip()))
+                return NamePatternStrategy(pattern.strip())
             except Exception as e:
                 self._log_message(f"文件名模式过滤设置错误: {e}")
                 return None
-
-        # 文件大小过滤
-        if min_size_mb is not None or max_size_mb is not None:
-            try:
-                min_bytes = (
-                    int(min_size_mb * 1024 * 1024) if min_size_mb is not None else None
-                )
-                max_bytes = (
-                    int(max_size_mb * 1024 * 1024) if max_size_mb is not None else None
-                )
-                strategies.append(SizeStrategy(min_bytes, max_bytes))
-            except (ValueError, TypeError) as e:
-                self._log_message(f"文件大小过滤设置错误: {e}")
-                return None
-
-        # 返回第一个策略，如果有多个可以组合
-        return strategies[0] if strategies else None
 
     def start_merge(
         self,
@@ -165,8 +149,6 @@ class ExcelMergerController:
         naming_strategy: str,
         filter_enabled: bool = False,
         pattern: str = "",
-        min_size_mb: Optional[float] = None,
-        max_size_mb: Optional[float] = None,
     ):
         """开始合并操作"""
         if self.is_processing:
@@ -182,10 +164,8 @@ class ExcelMergerController:
             return
 
         # 获取策略
-        naming_strat = self.get_naming_strategy(naming_strategy)
-        filter_strat = self.get_filter_strategy(
-            filter_enabled, pattern, min_size_mb, max_size_mb
-        )
+        naming_strat = self.get_naming_strategy(naming_strategy, input_dir)
+        filter_strat = self.get_filter_strategy(filter_enabled, pattern)
 
         # 在后台线程中执行合并
         self.is_processing = True
@@ -220,17 +200,15 @@ class ExcelMergerController:
             self._update_progress(0.1, "正在扫描 Excel 文件...")
 
             # 执行合并
-            self.current_merger.merge_excel()
+            success_count = self.current_merger.merge_excel()
 
             # 更新进度
             self._update_progress(1.0, "合并完成！")
-            self._log_message(f"成功合并 {self.current_merger.success_count} 个文件")
+            self._log_message(f"成功合并 {success_count} 个文件")
 
             # 完成回调
             if self.complete_callback:
-                self.complete_callback(
-                    True, f"成功合并 {self.current_merger.success_count} 个文件"
-                )
+                self.complete_callback(True, f"成功合并 {success_count} 个文件")
 
         except Exception as e:
             error_msg = f"合并过程中发生错误: {str(e)}"
@@ -268,9 +246,3 @@ class ExcelMergerController:
     def get_processing_status(self) -> bool:
         """获取处理状态"""
         return self.is_processing
-
-    def get_success_count(self) -> int:
-        """获取成功合并的文件数量"""
-        if self.current_merger:
-            return self.current_merger.success_count
-        return 0

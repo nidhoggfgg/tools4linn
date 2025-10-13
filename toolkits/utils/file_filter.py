@@ -11,6 +11,20 @@ class FileFilterStrategy:
         raise NotImplementedError
 
 
+class NameIncludeStrategy(FileFilterStrategy):
+    """Filter files based on name inclusion."""
+
+    def __init__(self, name: str):
+        """
+        Args:
+            name: Name to include
+        """
+        self.name = name
+
+    def should_include(self, file_path: Path) -> bool:
+        return self.name in file_path.stem
+
+
 class NamePatternStrategy(FileFilterStrategy):
     """Filter files based on name pattern matching."""
 

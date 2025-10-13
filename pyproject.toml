@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = ["openpyxl>=3.1.5", "customtkinter>=5.2.0"]
+dependencies = [
+    "openpyxl>=3.1.5",
+    "customtkinter>=5.2.0",
+    "pyinstaller>=6.16.0",
+]
 
 [[tool.uv.index]]
 url = "https://pypi.tuna.tsinghua.edu.cn/simple"
