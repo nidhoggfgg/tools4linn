@@ -166,7 +166,7 @@ class MainWindow:
     def _show_about_page(self):
         """显示关于页面"""
         about_text = """
-        Tools4Linn v1.0.0
+        Tools4Linn v0.0.1
         
         一个现代化的多功能桌面工具集
         
@@ -174,7 +174,7 @@ class MainWindow:
         • Excel 文件合并
         • 更多功能即将推出...
         
-        开发者：Linn
+        开发者：nidhoggfgg
         """
         self._show_info_dialog("关于", about_text)
 

@@ -17,7 +17,7 @@ class NameIncludeStrategy(FileFilterStrategy):
     def __init__(self, name: str):
         """
         Args:
-            name: Name to include
+            name: Name to include (without extension)
         """
         self.name = name
 

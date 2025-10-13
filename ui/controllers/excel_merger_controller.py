@@ -19,8 +19,11 @@ from toolkits.utils.naming import (
     PathSegmentsStrategy,
 )
 from toolkits.utils.file_filter import (
+    NameIncludeStrategy,
     NamePatternStrategy,
+    ExtensionStrategy,
     SizeStrategy,
+    DirectoryStrategy,
     FileFilterStrategy,
 )
 
@@ -130,17 +133,64 @@ class ExcelMergerController:
     def get_filter_strategy(
         self,
         enabled: bool,
+        filter_mode: str = "包含模式",
         pattern: str = "",
     ) -> Optional[FileFilterStrategy]:
-        if not enabled:
+        if not enabled or not pattern.strip():
             return None
 
-        if pattern.strip():
-            try:
+        try:
+            if filter_mode == "包含模式":
+                return NameIncludeStrategy(pattern.strip())
+            elif filter_mode == "正则模式":
                 return NamePatternStrategy(pattern.strip())
-            except Exception as e:
-                self._log_message(f"文件名模式过滤设置错误: {e}")
+            elif filter_mode == "扩展名模式":
+                # 解析扩展名，支持逗号分隔
+                extensions = [ext.strip() for ext in pattern.strip().split(",")]
+                return ExtensionStrategy(extensions)
+            elif filter_mode == "大小模式":
+                # 解析大小范围，支持格式如 "1-10" 或 "5" 或 ">5" 或 "<10"
+                return self._parse_size_strategy(pattern.strip())
+            elif filter_mode == "目录模式":
+                # 使用目录策略，包含指定路径
+                return DirectoryStrategy(include_dirs=[pattern.strip()])
+            else:
+                self._log_message(f"未知的过滤模式: {filter_mode}")
                 return None
+        except Exception as e:
+            self._log_message(f"文件名过滤设置错误: {e}")
+            return None
+
+    def _parse_size_strategy(self, size_pattern: str) -> Optional[SizeStrategy]:
+        """解析文件大小模式"""
+        size_pattern = size_pattern.strip()
+
+        try:
+            # 处理范围格式 "1-10"
+            if "-" in size_pattern:
+                parts = size_pattern.split("-")
+                if len(parts) == 2:
+                    min_size = int(float(parts[0].strip()) * 1024 * 1024)  # 转换为字节
+                    max_size = int(float(parts[1].strip()) * 1024 * 1024)
+                    return SizeStrategy(min_size=min_size, max_size=max_size)
+
+            # 处理大于格式 ">5"
+            elif size_pattern.startswith(">"):
+                min_size = int(float(size_pattern[1:].strip()) * 1024 * 1024)
+                return SizeStrategy(min_size=min_size)
+
+            # 处理小于格式 "<10"
+            elif size_pattern.startswith("<"):
+                max_size = int(float(size_pattern[1:].strip()) * 1024 * 1024)
+                return SizeStrategy(max_size=max_size)
+
+            # 处理单个值，作为最大值
+            else:
+                max_size = int(float(size_pattern) * 1024 * 1024)
+                return SizeStrategy(max_size=max_size)
+        except (ValueError, IndexError):
+            # 如果解析失败，返回None
+            return None
 
     def start_merge(
         self,
@@ -148,6 +198,7 @@ class ExcelMergerController:
         output_file: str,
         naming_strategy: str,
         filter_enabled: bool = False,
+        filter_mode: str = "包含模式",
         pattern: str = "",
     ):
         """开始合并操作"""
@@ -165,7 +216,7 @@ class ExcelMergerController:
 
         # 获取策略
         naming_strat = self.get_naming_strategy(naming_strategy, input_dir)
-        filter_strat = self.get_filter_strategy(filter_enabled, pattern)
+        filter_strat = self.get_filter_strategy(filter_enabled, filter_mode, pattern)
 
         # 在后台线程中执行合并
         self.is_processing = True

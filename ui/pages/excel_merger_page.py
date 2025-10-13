@@ -213,41 +213,39 @@ class ExcelMergerPage(ctk.CTkFrame):
         self.filter_options_frame = ctk.CTkFrame(filter_frame)
         self.filter_options_frame.pack(fill="x", pady=(0, 10))
 
+        # 文件名过滤模式选择
+        mode_frame = ctk.CTkFrame(self.filter_options_frame, fg_color="transparent")
+        mode_frame.pack(fill="x", padx=10, pady=5)
+
+        mode_label = ctk.CTkLabel(
+            mode_frame, text="文件名过滤模式:", font=ctk.CTkFont(size=12)
+        )
+        mode_label.pack(anchor="w", pady=(0, 5))
+
+        self.filter_mode = ctk.StringVar(value="包含模式")
+        self.filter_mode_menu = ctk.CTkOptionMenu(
+            mode_frame,
+            values=["包含模式", "正则模式", "扩展名模式", "大小模式", "目录模式"],
+            variable=self.filter_mode,
+            width=150,
+            height=30,
+            command=self._on_filter_mode_change,
+        )
+        self.filter_mode_menu.pack(anchor="w")
+
         # 文件名模式过滤
         pattern_frame = ctk.CTkFrame(self.filter_options_frame, fg_color="transparent")
         pattern_frame.pack(fill="x", padx=10, pady=5)
 
-        pattern_label = ctk.CTkLabel(
-            pattern_frame, text="文件名模式 (正则表达式):", font=ctk.CTkFont(size=12)
+        self.pattern_label = ctk.CTkLabel(
+            pattern_frame, text="文件名包含:", font=ctk.CTkFont(size=12)
         )
-        pattern_label.pack(anchor="w", pady=(0, 5))
+        self.pattern_label.pack(anchor="w", pady=(0, 5))
 
         self.pattern_entry = ctk.CTkEntry(
-            pattern_frame, placeholder_text="例如: .*_data.*", height=30
+            pattern_frame, placeholder_text="例如: data", height=30
         )
         self.pattern_entry.pack(fill="x")
-
-        # 文件大小过滤
-        size_frame = ctk.CTkFrame(self.filter_options_frame, fg_color="transparent")
-        size_frame.pack(fill="x", padx=10, pady=5)
-
-        size_label = ctk.CTkLabel(
-            size_frame, text="文件大小限制 (MB):", font=ctk.CTkFont(size=12)
-        )
-        size_label.pack(anchor="w", pady=(0, 5))
-
-        size_entry_frame = ctk.CTkFrame(size_frame, fg_color="transparent")
-        size_entry_frame.pack(fill="x")
-
-        self.min_size_entry = ctk.CTkEntry(
-            size_entry_frame, placeholder_text="最小大小", width=100, height=30
-        )
-        self.min_size_entry.pack(side="left", padx=(0, 10))
-
-        self.max_size_entry = ctk.CTkEntry(
-            size_entry_frame, placeholder_text="最大大小", width=100, height=30
-        )
-        self.max_size_entry.pack(side="left")
 
         # 默认隐藏过滤选项
         self.filter_options_frame.pack_forget()
@@ -343,6 +341,25 @@ class ExcelMergerPage(ctk.CTkFrame):
         else:
             self.filter_options_frame.pack_forget()
 
+    def _on_filter_mode_change(self, selected_mode):
+        """文件名过滤模式改变时的回调"""
+        # 更新标签和输入框的提示文本
+        if selected_mode == "包含模式":
+            self.pattern_label.configure(text="文件名包含:")
+            self.pattern_entry.configure(placeholder_text="例如: data")
+        elif selected_mode == "正则模式":
+            self.pattern_label.configure(text="正则表达式:")
+            self.pattern_entry.configure(placeholder_text="例如: .*_data.*")
+        elif selected_mode == "扩展名模式":
+            self.pattern_label.configure(text="文件扩展名:")
+            self.pattern_entry.configure(placeholder_text="例如: xlsx,xls")
+        elif selected_mode == "大小模式":
+            self.pattern_label.configure(text="文件大小限制 (MB):")
+            self.pattern_entry.configure(placeholder_text="例如: 1-10")
+        elif selected_mode == "目录模式":
+            self.pattern_label.configure(text="目录路径包含:")
+            self.pattern_entry.configure(placeholder_text="例如: /data/")
+
     def _start_merge(self):
         """开始合并操作"""
         if self.controller.get_processing_status():
@@ -350,23 +367,8 @@ class ExcelMergerPage(ctk.CTkFrame):
 
         # 获取过滤选项
         filter_enabled = self.filter_enabled.get()
+        filter_mode = self.filter_mode.get()
         pattern = self.pattern_entry.get().strip()
-
-        min_size_mb = None
-        max_size_mb = None
-        if self.min_size_entry.get().strip():
-            try:
-                min_size_mb = float(self.min_size_entry.get())
-            except ValueError:
-                messagebox.showerror("错误", "最小文件大小必须是有效数字")
-                return
-
-        if self.max_size_entry.get().strip():
-            try:
-                max_size_mb = float(self.max_size_entry.get())
-            except ValueError:
-                messagebox.showerror("错误", "最大文件大小必须是有效数字")
-                return
 
         # 更新UI状态
         self.merge_button.configure(text="处理中...", state="disabled")
@@ -379,6 +381,7 @@ class ExcelMergerPage(ctk.CTkFrame):
             output_file=self.output_file.get(),
             naming_strategy=self.naming_strategy.get(),
             filter_enabled=filter_enabled,
+            filter_mode=filter_mode,
             pattern=pattern,
         )
 
