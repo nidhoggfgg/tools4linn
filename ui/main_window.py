@@ -13,6 +13,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from ui.pages.home_page import HomePage
 from ui.pages.excel_merger_page import ExcelMergerPage
+from ui.pages.time_generator_page import TimeGeneratorPage
 
 
 class MainWindow:
@@ -84,6 +85,11 @@ class MainWindow:
         # Excel 合并按钮
         self._create_nav_button(
             nav_frame, "excel_merger", "📊 Excel 合并", self._show_excel_merger_page
+        )
+
+        # 时间生成器按钮
+        self._create_nav_button(
+            nav_frame, "time_generator", "⏰ 时间生成器", self._show_time_generator_page
         )
 
         # 分隔线
@@ -158,6 +164,13 @@ class MainWindow:
         self._show_page("excel_merger")
         self._update_nav_button("excel_merger")
 
+    def _show_time_generator_page(self):
+        """显示时间生成器页面"""
+        if "time_generator" not in self.pages:
+            self.pages["time_generator"] = TimeGeneratorPage(self.content_frame)
+        self._show_page("time_generator")
+        self._update_nav_button("time_generator")
+
     def _show_settings_page(self):
         """显示设置页面"""
         # TODO: 实现设置页面
@@ -166,12 +179,13 @@ class MainWindow:
     def _show_about_page(self):
         """显示关于页面"""
         about_text = """
-        Tools4Linn v0.0.1
+        Tools4Linn v0.1.0
         
         一个现代化的多功能桌面工具集
         
         功能特性：
         • Excel 文件合并
+        • 时间点生成器（支持固定步长和随机步长模式）
         • 更多功能即将推出...
         
         开发者：nidhoggfgg
