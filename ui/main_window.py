@@ -14,6 +14,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from ui.pages.home_page import HomePage
 from ui.pages.excel_merger_page import ExcelMergerPage
 from ui.pages.time_generator_page import TimeGeneratorPage
+from ui.pages.directory_creator_page import DirectoryCreatorPage
 
 
 class MainWindow:
@@ -90,6 +91,11 @@ class MainWindow:
         # 时间生成器按钮
         self._create_nav_button(
             nav_frame, "time_generator", "⏰ 时间生成器", self._show_time_generator_page
+        )
+
+        # 目录创建器按钮
+        self._create_nav_button(
+            nav_frame, "directory_creator", "📁 目录创建器", self._show_directory_creator_page
         )
 
         # 分隔线
@@ -171,6 +177,13 @@ class MainWindow:
         self._show_page("time_generator")
         self._update_nav_button("time_generator")
 
+    def _show_directory_creator_page(self):
+        """显示目录创建器页面"""
+        if "directory_creator" not in self.pages:
+            self.pages["directory_creator"] = DirectoryCreatorPage(self.content_frame)
+        self._show_page("directory_creator")
+        self._update_nav_button("directory_creator")
+
     def _show_settings_page(self):
         """显示设置页面"""
         # TODO: 实现设置页面
@@ -186,6 +199,7 @@ class MainWindow:
         功能特性：
         • Excel 文件合并
         • 时间点生成器（支持固定步长和随机步长模式）
+        • 目录创建器（支持列表和树状模板模式）
         • 更多功能即将推出...
         
         开发者：nidhoggfgg

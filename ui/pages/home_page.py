@@ -79,16 +79,16 @@ class HomePage(ctk.CTkFrame):
                 "status": "可用",
             },
             {
-                "icon": "📁",
-                "title": "文件管理",
-                "description": "批量文件操作和管理工具",
-                "status": "开发中",
+                "icon": "⏰",
+                "title": "时间生成器",
+                "description": "生成时间点序列，支持固定步长和随机步长模式",
+                "status": "可用",
             },
             {
-                "icon": "🔧",
-                "title": "系统工具",
-                "description": "系统优化和维护工具集合",
-                "status": "计划中",
+                "icon": "📁",
+                "title": "目录创建器",
+                "description": "批量创建多层目录结构，支持列表和树状模板模式",
+                "status": "可用",
             },
             {
                 "icon": "🎨",
@@ -165,7 +165,9 @@ class HomePage(ctk.CTkFrame):
         3. 查看实时日志了解处理进度
         
         当前可用功能：
-        • Excel 合并：点击左侧 "📊 Excel 合并" 开始使用
+        • Excel 合并：合并多个 Excel 文件为一个
+        • 时间生成器：生成时间点序列
+        • 目录创建器：批量创建目录结构
         """
 
         quick_start_label = ctk.CTkLabel(

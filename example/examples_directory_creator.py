@@ -87,13 +87,16 @@ def example3_template_syntax():
 
     creator = DirectoryCreator(base_path=example_base / "example3")
 
-    # 使用类似 tree 命令的格式
+    # 使用简单缩进格式（支持注释）
     template = """
+    # 数据处理管道项目
     data_pipeline/
+      # 原始数据目录
       raw/
         csv/
         json/
         xml/
+      # 处理后的数据
       processed/
         cleaned/
         normalized/
@@ -188,6 +191,68 @@ def example5_real_world():
     creator.print_tree(max_depth=4)
 
 
+def example6_template_with_files():
+    """示例6：模板语法增强功能 - 同时创建目录和文件"""
+    print("\n" + "=" * 60)
+    print("示例6：增强模板功能 - 支持创建文件和目录")
+    print("=" * 60)
+
+    creator = DirectoryCreator(base_path=example_base / "example6")
+
+    # 使用模板同时创建目录和文件
+    template = """
+    # Web 应用项目
+    web_app/
+      # 前端源码
+      src/
+        # 组件目录
+        components/
+          Header.tsx
+          Footer.tsx
+          Sidebar.tsx
+        # 页面
+        pages/
+          index.tsx
+          about.tsx
+          contact.tsx
+        # 工具函数
+        utils/
+          api.ts
+          helpers.ts
+          constants.ts
+        # 样式文件
+        styles/
+          global.css
+          theme.css
+        # 入口文件
+        App.tsx
+        main.tsx
+      # 公共资源
+      public/
+        index.html
+        favicon.ico
+      # 配置文件
+      package.json
+      tsconfig.json
+      vite.config.ts
+      # 文档
+      README.md
+    """
+
+    paths = creator.create_from_template(template, create_files=True)
+
+    # 获取统计信息
+    summary = creator.get_summary()
+    
+    print(f"\n✓ 创建成功！")
+    print(f"  - 目录数量: {summary['directories']}")
+    print(f"  - 文件数量: {summary['files']}")
+    print(f"  - 总计: {summary['total']}")
+    
+    print("\n创建的目录和文件：")
+    creator.print_tree(show_files=True)
+
+
 if __name__ == "__main__":
     print("\n" + "🎯 " * 20)
     print("目录创建器 (DirectoryCreator) 使用示例")
@@ -199,6 +264,7 @@ if __name__ == "__main__":
     example3_template_syntax()
     example4_convenience_functions()
     example5_real_world()
+    example6_template_with_files()
 
     print("\n" + "=" * 60)
     print("✨ 所有示例运行完成！")
