@@ -243,12 +243,12 @@ def example6_template_with_files():
 
     # 获取统计信息
     summary = creator.get_summary()
-    
+
     print(f"\n✓ 创建成功！")
     print(f"  - 目录数量: {summary['directories']}")
     print(f"  - 文件数量: {summary['files']}")
     print(f"  - 总计: {summary['total']}")
-    
+
     print("\n创建的目录和文件：")
     creator.print_tree(show_files=True)
 

@@ -73,14 +73,17 @@ print("\n5. 结合文件创建")
 print("   为每个服务创建配置文件")
 
 creator = DirectoryCreator(base_path=output / "example5")
-creator.create_from_template("""
+creator.create_from_template(
+    """
 services/
   {api,web,worker}/
     src/
       __init__.py
     README.md
     Dockerfile
-""", create_files=True)
+""",
+    create_files=True,
+)
 summary = creator.get_summary()
 print(f"   [OK] 创建了 {summary['directories']} 个目录和 {summary['files']} 个文件")
 
@@ -95,4 +98,3 @@ print("- 使用 {1..10} 创建数字范围")
 print("- 使用 {01..10} 创建补零的数字范围")
 print("- 可以任意嵌套组合使用")
 print(f"\n查看完整指南: {Path(__file__).parent / 'BRACE_EXPANSION_GUIDE.md'}")
-

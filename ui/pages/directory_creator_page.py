@@ -62,7 +62,9 @@ class DirectoryCreatorPage(ctk.CTkFrame):
         settings_frame.pack(fill="x", padx=10, pady=10)
 
         ctk.CTkLabel(
-            settings_frame, text="选择保存位置", font=ctk.CTkFont(size=16, weight="bold")
+            settings_frame,
+            text="选择保存位置",
+            font=ctk.CTkFont(size=16, weight="bold"),
         ).pack(pady=(10, 5))
 
         # 基础路径设置
@@ -218,12 +220,18 @@ class DirectoryCreatorPage(ctk.CTkFrame):
         # 设置树形视图样式
         style = ttk.Style()
         style.theme_use("default")
-        
+
         # 根据当前主题设置颜色
-        bg_color = parent._apply_appearance_mode(ctk.ThemeManager.theme["CTkFrame"]["fg_color"])
-        text_color = parent._apply_appearance_mode(ctk.ThemeManager.theme["CTkLabel"]["text_color"])
-        selected_color = parent._apply_appearance_mode(ctk.ThemeManager.theme["CTkButton"]["fg_color"])
-        
+        bg_color = parent._apply_appearance_mode(
+            ctk.ThemeManager.theme["CTkFrame"]["fg_color"]
+        )
+        text_color = parent._apply_appearance_mode(
+            ctk.ThemeManager.theme["CTkLabel"]["text_color"]
+        )
+        selected_color = parent._apply_appearance_mode(
+            ctk.ThemeManager.theme["CTkButton"]["fg_color"]
+        )
+
         style.configure(
             "Treeview",
             background=bg_color,
@@ -236,7 +244,9 @@ class DirectoryCreatorPage(ctk.CTkFrame):
         style.map("Treeview", background=[("selected", selected_color)])
 
         # 初始化根节点
-        self.tree_view.insert("", "end", "root", text="根目录", values=("📁",), open=True)
+        self.tree_view.insert(
+            "", "end", "root", text="根目录", values=("📁",), open=True
+        )
 
         # 右侧：操作按钮区
         button_container = ctk.CTkFrame(main_container)
@@ -399,56 +409,50 @@ class DirectoryCreatorPage(ctk.CTkFrame):
         dialog.geometry("400x300")
         dialog.transient(self)
         dialog.grab_set()
-        
+
         # 居中显示
         dialog.update_idletasks()
         x = (dialog.winfo_screenwidth() // 2) - (400 // 2)
         y = (dialog.winfo_screenheight() // 2) - (300 // 2)
         dialog.geometry(f"400x300+{x}+{y}")
-        
+
         # 提示文本
         ctk.CTkLabel(
-            dialog,
-            text=prompt,
-            font=ctk.CTkFont(size=13),
-            wraplength=360
+            dialog, text=prompt, font=ctk.CTkFont(size=13), wraplength=360
         ).pack(pady=(20, 10), padx=20)
-        
+
         # 文本输入框
         text_input = ctk.CTkTextbox(dialog, height=150)
         text_input.pack(fill="both", expand=True, padx=20, pady=10)
         if placeholder:
             text_input.insert("1.0", placeholder)
-        
+
         # 按钮区域
         button_frame = ctk.CTkFrame(dialog, fg_color="transparent")
         button_frame.pack(fill="x", padx=20, pady=(0, 20))
-        
+
         result = {"value": None}
-        
+
         def on_confirm():
             result["value"] = text_input.get("1.0", "end").strip()
             dialog.destroy()
-        
+
         def on_cancel():
             dialog.destroy()
-        
-        ctk.CTkButton(
-            button_frame,
-            text="确定",
-            command=on_confirm,
-            width=100
-        ).pack(side="right", padx=5)
-        
+
+        ctk.CTkButton(button_frame, text="确定", command=on_confirm, width=100).pack(
+            side="right", padx=5
+        )
+
         ctk.CTkButton(
             button_frame,
             text="取消",
             command=on_cancel,
             width=100,
             fg_color="gray50",
-            hover_color="gray40"
+            hover_color="gray40",
         ).pack(side="right", padx=5)
-        
+
         # 等待对话框关闭
         dialog.wait_window()
         return result["value"]
@@ -458,36 +462,36 @@ class DirectoryCreatorPage(ctk.CTkFrame):
         解析输入文本，支持多种格式：
         1. 花括号语法：{a,b,c} 或 {\na\nb\nc\n} - 作为一个节点（延迟展开）
         2. 纯列表：a\nb\nc - 批量添加多个节点
-        
+
         Returns:
             list: 解析后的名称列表
         """
         if not input_text:
             return []
-        
+
         input_text = input_text.strip()
-        
+
         # 检测是否包含花括号
-        if '{' in input_text and '}' in input_text:
+        if "{" in input_text and "}" in input_text:
             # 花括号模式：作为单个节点（延迟展开）
             # 标准化多行花括号格式为逗号分隔（更简洁）
-            if '\n' in input_text:
+            if "\n" in input_text:
                 # 多行花括号：提取内容并转换为逗号分隔
-                lines = input_text.split('\n')
+                lines = input_text.split("\n")
                 items = []
                 in_brace = False
                 for line in lines:
                     line = line.strip()
-                    if line == '{':
+                    if line == "{":
                         in_brace = True
-                    elif line == '}':
+                    elif line == "}":
                         in_brace = False
                     elif in_brace and line:
                         items.append(line)
-                
+
                 if items:
                     # 返回标准化的花括号格式
-                    return ['{' + ','.join(items) + '}']
+                    return ["{" + ",".join(items) + "}"]
                 else:
                     # 保留原始输入
                     return [input_text]
@@ -496,7 +500,7 @@ class DirectoryCreatorPage(ctk.CTkFrame):
                 return [input_text]
         else:
             # 纯列表模式：按行分割，批量添加
-            lines = input_text.split('\n')
+            lines = input_text.split("\n")
             return [line.strip() for line in lines if line.strip()]
 
     def add_folder_node(self):
@@ -510,30 +514,30 @@ class DirectoryCreatorPage(ctk.CTkFrame):
         folder_names = self._create_multiline_input_dialog(
             title="添加文件夹",
             prompt="支持两种模式:\n• 纯列表: 每行一个，批量添加\n• 花括号: {a,b,c} 或 {\\n  a\\n  b\\n}，添加为单个节点，可继续添加子目录",
-            placeholder="模式1（批量添加）：\n组件\n服务\n工具\n\n模式2（延迟展开）：\n{组件,服务,工具}\n\n或多行花括号：\n{\n  组件\n  服务\n  工具\n}"
+            placeholder="模式1（批量添加）：\n组件\n服务\n工具\n\n模式2（延迟展开）：\n{组件,服务,工具}\n\n或多行花括号：\n{\n  组件\n  服务\n  工具\n}",
         )
 
         if folder_names:
             # 处理输入：支持花括号语法或纯列表
             names = self._parse_input(folder_names)
-            
+
             if names:
                 # 批量添加到树形视图
                 added_count = 0
                 for name in names:
-                    self.tree_view.insert(
-                        selected[0], "end", text=name, values=("📁",)
-                    )
+                    self.tree_view.insert(selected[0], "end", text=name, values=("📁",))
                     added_count += 1
-                
+
                 # 展开父节点
                 self.tree_view.item(selected[0], open=True)
-                
+
                 # 显示添加结果
                 if added_count > 1:
                     messagebox.showinfo("完成", f"成功批量添加 {added_count} 个文件夹")
-                elif added_count == 1 and '{' in names[0]:
-                    messagebox.showinfo("完成", f"已添加花括号节点: {names[0]}\n创建时将自动展开")
+                elif added_count == 1 and "{" in names[0]:
+                    messagebox.showinfo(
+                        "完成", f"已添加花括号节点: {names[0]}\n创建时将自动展开"
+                    )
 
     def add_file_node(self):
         """添加文件节点（支持多行和花括号展开）"""
@@ -552,30 +556,30 @@ class DirectoryCreatorPage(ctk.CTkFrame):
         file_names = self._create_multiline_input_dialog(
             title="添加文件",
             prompt="支持两种模式:\n• 纯列表: 每行一个，批量添加\n• 花括号: {a,b}.txt，添加为单个节点（可在其父级添加子目录）",
-            placeholder="模式1（批量添加）：\nREADME.md\nconfig.json\nmain.py\n\n模式2（延迟展开）：\n{main,test,utils}.py\n\n或多行花括号：\n{\n  README.md\n  package.json\n  .gitignore\n}"
+            placeholder="模式1（批量添加）：\nREADME.md\nconfig.json\nmain.py\n\n模式2（延迟展开）：\n{main,test,utils}.py\n\n或多行花括号：\n{\n  README.md\n  package.json\n  .gitignore\n}",
         )
 
         if file_names:
             # 处理输入：支持花括号语法或纯列表
             names = self._parse_input(file_names)
-            
+
             if names:
                 # 批量添加到树形视图
                 added_count = 0
                 for name in names:
-                    self.tree_view.insert(
-                        selected[0], "end", text=name, values=("📄",)
-                    )
+                    self.tree_view.insert(selected[0], "end", text=name, values=("📄",))
                     added_count += 1
-                
+
                 # 展开父节点
                 self.tree_view.item(selected[0], open=True)
-                
+
                 # 显示添加结果
                 if added_count > 1:
                     messagebox.showinfo("完成", f"成功批量添加 {added_count} 个文件")
-                elif added_count == 1 and '{' in names[0]:
-                    messagebox.showinfo("完成", f"已添加花括号节点: {names[0]}\n创建时将自动展开")
+                elif added_count == 1 and "{" in names[0]:
+                    messagebox.showinfo(
+                        "完成", f"已添加花括号节点: {names[0]}\n创建时将自动展开"
+                    )
 
     def rename_node(self):
         """重命名节点"""
@@ -615,7 +619,9 @@ class DirectoryCreatorPage(ctk.CTkFrame):
             return
 
         node_name = self.tree_view.item(selected[0])["text"]
-        if messagebox.askyesno("确认删除", f"确定要删除 '{node_name}' 及其所有子项吗？"):
+        if messagebox.askyesno(
+            "确认删除", f"确定要删除 '{node_name}' 及其所有子项吗？"
+        ):
             self.tree_view.delete(selected[0])
 
     def move_node_up(self):
@@ -801,7 +807,7 @@ class DirectoryCreatorPage(ctk.CTkFrame):
         self.result_text.insert("1.0", result_text)
 
         # 构建提示消息
-        if summary['files'] > 0:
+        if summary["files"] > 0:
             msg = f"成功创建 {summary['directories']} 个文件夹和 {summary['files']} 个文件！"
         else:
             msg = f"成功创建 {summary['directories']} 个文件夹！"
@@ -822,4 +828,3 @@ class DirectoryCreatorPage(ctk.CTkFrame):
         self.clipboard_clear()
         self.clipboard_append(content)
         messagebox.showinfo("完成", "已复制到剪贴板")
-

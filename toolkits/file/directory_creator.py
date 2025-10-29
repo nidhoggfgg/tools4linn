@@ -6,7 +6,7 @@ import re
 def _expand_braces(pattern: str) -> List[str]:
     """
     展开花括号表达式，支持多种模式：
-    
+
     1. 逗号分隔: {a,b,c} -> ['a', 'b', 'c']
     2. 多行分隔: {
                    a
@@ -17,74 +17,83 @@ def _expand_braces(pattern: str) -> List[str]:
     4. 数字范围(补零): {01..10} -> ['01', '02', ..., '10']
     5. 字母范围: {a..z} -> ['a', 'b', ..., 'z']
     6. 嵌套/组合: src/{a,b}/{1..3} -> ['src/a/1', 'src/a/2', ...]
-    
+
     Args:
         pattern: 包含花括号表达式的字符串
-        
+
     Returns:
         展开后的字符串列表
     """
     # 如果没有花括号，直接返回
-    if '{' not in pattern or '}' not in pattern:
+    if "{" not in pattern or "}" not in pattern:
         return [pattern]
-    
+
     # 找到第一个花括号对
-    start = pattern.find('{')
+    start = pattern.find("{")
     if start == -1:
         return [pattern]
-    
+
     # 找到匹配的右花括号（需要处理嵌套）
     depth = 0
     end = -1
     for i in range(start, len(pattern)):
-        if pattern[i] == '{':
+        if pattern[i] == "{":
             depth += 1
-        elif pattern[i] == '}':
+        elif pattern[i] == "}":
             depth -= 1
             if depth == 0:
                 end = i
                 break
-    
+
     if end == -1:
         # 没有匹配的右花括号，返回原字符串
         return [pattern]
-    
+
     # 提取花括号内容
     prefix = pattern[:start]
-    content = pattern[start + 1:end]
-    suffix = pattern[end + 1:]
-    
+    content = pattern[start + 1 : end]
+    suffix = pattern[end + 1 :]
+
     # 如果内容为空，不展开
     if not content:
         return [pattern]
-    
+
     # 检测是否是范围表达式
-    range_match = re.match(r'^(\d+|[a-zA-Z])\.\.(\d+|[a-zA-Z])$', content)
-    
+    range_match = re.match(r"^(\d+|[a-zA-Z])\.\.(\d+|[a-zA-Z])$", content)
+
     if range_match:
         # 范围表达式
         start_val, end_val = range_match.groups()
-        
+
         if start_val.isdigit() and end_val.isdigit():
             # 数字范围
             start_num = int(start_val)
             end_num = int(end_val)
-            
+
             # 检测是否需要补零
-            width = len(start_val) if start_val.startswith('0') else 0
-            
+            width = len(start_val) if start_val.startswith("0") else 0
+
             if start_num <= end_num:
                 if width > 0:
-                    expanded = [str(i).zfill(width) for i in range(start_num, end_num + 1)]
+                    expanded = [
+                        str(i).zfill(width) for i in range(start_num, end_num + 1)
+                    ]
                 else:
                     expanded = [str(i) for i in range(start_num, end_num + 1)]
             else:
                 # 逆序
                 if width > 0:
-                    expanded = [str(i).zfill(width) for i in range(start_num, end_num - 1, -1)]
+                    expanded = [
+                        str(i).zfill(width) for i in range(start_num, end_num - 1, -1)
+                    ]
                 else:
                     expanded = [str(i) for i in range(start_num, end_num - 1, -1)]
-        elif start_val.isalpha() and end_val.isalpha() and len(start_val) == 1 and len(end_val) == 1:
+        elif (
+            start_val.isalpha()
+            and end_val.isalpha()
+            and len(start_val) == 1
+            and len(end_val) == 1
+        ):
             # 字母范围
             if start_val <= end_val:
                 expanded = [chr(i) for i in range(ord(start_val), ord(end_val) + 1)]
@@ -100,44 +109,44 @@ def _expand_braces(pattern: str) -> List[str]:
         parts = []
         current = []
         depth = 0
-        
+
         for char in content:
-            if char == '{':
+            if char == "{":
                 depth += 1
                 current.append(char)
-            elif char == '}':
+            elif char == "}":
                 depth -= 1
                 current.append(char)
-            elif char == ',' and depth == 0:
+            elif char == "," and depth == 0:
                 # 逗号分隔
-                part = ''.join(current).strip()
+                part = "".join(current).strip()
                 if part:  # 忽略空白部分
                     parts.append(part)
                 current = []
-            elif char == '\n' and depth == 0:
+            elif char == "\n" and depth == 0:
                 # 换行分隔（支持多行语法）
-                part = ''.join(current).strip()
+                part = "".join(current).strip()
                 if part:  # 忽略空白部分
                     parts.append(part)
                 current = []
             else:
                 current.append(char)
-        
+
         # 处理最后一个部分
         if current:
-            part = ''.join(current).strip()
+            part = "".join(current).strip()
             if part:
                 parts.append(part)
-        
+
         expanded = parts
-    
+
     # 生成结果
     results = []
     for item in expanded:
         new_pattern = prefix + item + suffix
         # 递归处理剩余的花括号
         results.extend(_expand_braces(new_pattern))
-    
+
     return results
 
 
@@ -282,80 +291,80 @@ class DirectoryCreator:
 
     def _merge_multiline_braces(self, template: str) -> str:
         """
-        将多行花括号语法合并为单行，以便后续处理。
-        
-        将类似：
-        {
-          a
-          b
-        }
-        
-        转换为：
-        {a
-b
-c}
-        
-        Args:
-            template: 原始模板字符串
-            
-        Returns:
-            合并后的模板字符串
+                将多行花括号语法合并为单行，以便后续处理。
+
+                将类似：
+                {
+                  a
+                  b
+                }
+
+                转换为：
+                {a
+        b
+        c}
+
+                Args:
+                    template: 原始模板字符串
+
+                Returns:
+                    合并后的模板字符串
         """
         lines = template.split("\n")
         result_lines = []
         i = 0
-        
+
         while i < len(lines):
             line = lines[i]
-            
+
             # 检测是否包含未闭合的花括号
-            if '{' in line:
+            if "{" in line:
                 # 检查这一行的 { 和 } 是否配对
-                open_count = line.count('{')
-                close_count = line.count('}')
-                
+                open_count = line.count("{")
+                close_count = line.count("}")
+
                 if open_count > close_count:
                     # 有未闭合的花括号，需要收集后续行
                     indent = len(line) - len(line.lstrip())
-                    
+
                     # 找到 { 的位置，提取前缀和后缀
-                    brace_start = line.index('{')
+                    brace_start = line.index("{")
                     prefix = line[:brace_start]
-                    first_content = line[brace_start + 1:].strip()
-                    
+                    first_content = line[brace_start + 1 :].strip()
+
                     # 收集花括号内容
                     brace_content = []
-                    if first_content and first_content != '}':
+                    if first_content and first_content != "}":
                         brace_content.append(first_content)
-                    
+
                     # 继续收集后续行
                     depth = open_count - close_count
                     j = i + 1
                     suffix = ""
-                    
+
                     while j < len(lines) and depth > 0:
                         next_line = lines[j]
                         next_stripped = next_line.strip()
-                        
+
                         # 计算本行的括号变化
-                        line_open = next_line.count('{')
-                        line_close = next_line.count('}')
-                        
+                        line_open = next_line.count("{")
+                        line_close = next_line.count("}")
+
                         # 如果这行包含闭合括号
                         if line_close > 0:
                             # 找到最后一个 } 的位置
-                            close_pos = next_line.rfind('}')
-                            
+                            close_pos = next_line.rfind("}")
+
                             # 提取 } 之前的内容
                             before_close = next_line[:close_pos].strip()
                             if before_close:
                                 brace_content.append(before_close)
-                            
+
                             # 提取 } 之后的内容（如 /）
-                            suffix = next_line[close_pos + 1:].strip()
-                            
+                            suffix = next_line[close_pos + 1 :].strip()
+
                             depth += line_open - line_close
-                            
+
                             if depth <= 0:
                                 j += 1
                                 break
@@ -364,20 +373,22 @@ c}
                             if next_stripped:
                                 brace_content.append(next_stripped)
                             depth += line_open
-                        
+
                         j += 1
-                    
+
                     # 重构为单行（用逗号连接，而不是换行符）
-                    merged_content = ','.join(brace_content)
-                    merged_line = ' ' * indent + prefix + '{' + merged_content + '}' + suffix
+                    merged_content = ",".join(brace_content)
+                    merged_line = (
+                        " " * indent + prefix + "{" + merged_content + "}" + suffix
+                    )
                     result_lines.append(merged_line)
                     i = j
                     continue
-            
+
             result_lines.append(line)
             i += 1
-        
-        return '\n'.join(result_lines)
+
+        return "\n".join(result_lines)
 
     def create_from_template(
         self, template: str, create_files: bool = False, expand_braces: bool = True
@@ -449,7 +460,7 @@ c}
             ...   tests/
             ...     {unit,integration,e2e}/
             ... ''')
-            
+
             # 多行花括号语法 - 更清晰的可读性
             >>> creator.create_from_template('''
             ... project/
@@ -490,10 +501,10 @@ c}
         """
         self.created_dirs = []
         self.created_files: List[Path] = []
-        
+
         # 预处理：合并多行花括号为单行
         template = self._merge_multiline_braces(template)
-        
+
         lines = template.strip().split("\n")
 
         # 第一步：解析模板结构，构建带缩进的条目列表
@@ -506,52 +517,52 @@ c}
             # 计算缩进级别
             indent = len(line) - len(line.lstrip())
             name = line.strip()
-            
+
             if not name:
                 continue
 
             # 判断是目录还是文件
             is_directory = name.endswith("/")
             name = name.rstrip("/")
-            
+
             # 检测是否有文件扩展名
             has_extension = "." in name and not name.startswith(".")
-            
+
             entries.append((indent, name, is_directory, has_extension))
 
         # 第二步：递归展开花括号并构建完整路径
         def expand_tree(entries_list, start_idx=0, parent_indent=-1, parent_paths=None):
             """
             递归展开树形结构，处理花括号展开。
-            
+
             Args:
                 entries_list: 条目列表
                 start_idx: 开始索引
                 parent_indent: 父节点的缩进级别
                 parent_paths: 父节点的所有路径（考虑展开后的多个路径）
-            
+
             Returns:
                 (next_idx, all_paths) - 下一个要处理的索引和所有生成的路径
             """
             if parent_paths is None:
                 parent_paths = [[]]
-            
+
             all_generated_paths = []
             idx = start_idx
-            
+
             while idx < len(entries_list):
                 indent, name, is_dir_marker, has_ext = entries_list[idx]
-                
+
                 # 如果缩进不是子级，返回
                 if indent <= parent_indent:
                     break
-                
+
                 # 展开当前名称
-                if expand_braces and '{' in name and '}' in name:
+                if expand_braces and "{" in name and "}" in name:
                     expanded_names = _expand_braces(name)
                 else:
                     expanded_names = [name]
-                
+
                 # 为每个展开的名称创建路径
                 current_level_paths = []
                 for parent_path in parent_paths:
@@ -559,18 +570,20 @@ c}
                         new_path = parent_path + [expanded_name]
                         current_level_paths.append(new_path)
                         all_generated_paths.append((new_path, is_dir_marker, has_ext))
-                
+
                 # 查看下一行，判断是否有子节点
                 if idx + 1 < len(entries_list):
                     next_indent = entries_list[idx + 1][0]
                     if next_indent > indent:
                         # 有子节点，递归处理
-                        idx, child_paths = expand_tree(entries_list, idx + 1, indent, current_level_paths)
+                        idx, child_paths = expand_tree(
+                            entries_list, idx + 1, indent, current_level_paths
+                        )
                         all_generated_paths.extend(child_paths)
                         continue
-                
+
                 idx += 1
-            
+
             return idx, all_generated_paths
 
         # 执行展开
@@ -578,28 +591,31 @@ c}
 
         # 第三步：创建目录和文件
         created_paths_set = set()  # 使用集合去重
-        
+
         for path_parts, is_dir_marker, has_ext in all_paths_info:
             if not path_parts:
                 continue
-            
+
             # 检测是否为文件
             is_file = create_files and not is_dir_marker and has_ext
-            
+
             full_path = self.base_path / Path(*path_parts)
-            
+
             # 避免重复创建
             if full_path in created_paths_set:
                 continue
             created_paths_set.add(full_path)
-            
+
             if is_file:
                 # 创建文件
                 full_path.parent.mkdir(parents=True, exist_ok=self.exist_ok)
                 full_path.touch(exist_ok=self.exist_ok)
                 self.created_files.append(full_path)
                 # 确保父目录在创建列表中
-                if full_path.parent not in self.created_dirs and full_path.parent != self.base_path:
+                if (
+                    full_path.parent not in self.created_dirs
+                    and full_path.parent != self.base_path
+                ):
                     self.created_dirs.append(full_path.parent)
             else:
                 # 创建目录
@@ -792,4 +808,6 @@ def create_directories_from_template(
         ... ''')
     """
     creator = DirectoryCreator(base_path=base_path, exist_ok=exist_ok)
-    return creator.create_from_template(template, create_files=create_files, expand_braces=expand_braces)
+    return creator.create_from_template(
+        template, create_files=create_files, expand_braces=expand_braces
+    )

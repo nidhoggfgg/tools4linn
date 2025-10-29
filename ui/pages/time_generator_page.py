@@ -376,10 +376,10 @@ class TimeGeneratorPage(ctk.CTkFrame):
         """显示生成结果"""
         # 显示时间范围信息
         info = self.controller.get_duration_info()
-        info_text = f"""时间范围: {info.get('start_time', 'N/A')} 到 {info.get('end_time', 'N/A')}
-总时长: {info.get('total_duration_seconds', 0):.0f} 秒 ({info.get('total_duration_hours', 0):.2f} 小时)
-生成模式: {info.get('mode', 'N/A')}
-时间点数量: {info.get('point_count', 0)}
+        info_text = f"""时间范围: {info.get("start_time", "N/A")} 到 {info.get("end_time", "N/A")}
+总时长: {info.get("total_duration_seconds", 0):.0f} 秒 ({info.get("total_duration_hours", 0):.2f} 小时)
+生成模式: {info.get("mode", "N/A")}
+时间点数量: {info.get("point_count", 0)}
 当前格式: {self.current_format}"""
 
         self.info_text.delete("1.0", "end")

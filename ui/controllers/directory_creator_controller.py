@@ -209,4 +209,3 @@ class DirectoryCreatorController:
                 lines.append(f"  {path}{suffix}")
 
         return "\n".join(lines)
-
