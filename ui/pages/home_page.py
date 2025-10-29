@@ -1,7 +1,3 @@
-"""
-首页 - 欢迎页面和功能概览
-"""
-
 import customtkinter as ctk
 
 

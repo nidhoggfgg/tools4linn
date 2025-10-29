@@ -1,8 +1,3 @@
-"""
-主窗口类 - 现代化桌面应用主界面
-使用 CustomTkinter 构建侧边栏导航 + 主内容区布局
-"""
-
 import customtkinter as ctk
 from typing import Optional, Dict
 from pathlib import Path
@@ -95,7 +90,10 @@ class MainWindow:
 
         # 目录创建器按钮
         self._create_nav_button(
-            nav_frame, "directory_creator", "📁 目录创建器", self._show_directory_creator_page
+            nav_frame,
+            "directory_creator",
+            "📁 目录创建器",
+            self._show_directory_creator_page,
         )
 
         # 分隔线
