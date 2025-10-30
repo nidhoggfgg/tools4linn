@@ -1,4 +1,3 @@
-import os
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
@@ -7,12 +6,6 @@ from openai import OpenAI
 
 ReasoningCallback = Callable[[str], None]
 AnswerCallback = Callable[[str], None]
-
-
-def _default_base_url() -> str:
-    return os.getenv(
-        "DASHSCOPE_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"
-    )
 
 
 def _coerce_content(content: Any) -> str:
@@ -42,14 +35,16 @@ class AIChatClient:
     def __init__(
         self,
         *,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
+        api_key: str,
+        base_url: str,
     ) -> None:
-        self._api_key = api_key or os.getenv("DASHSCOPE_API_KEY")
-        if not self._api_key:
-            raise ValueError("DASHSCOPE_API_KEY 未配置，无法初始化 AIChatClient")
+        if not api_key:
+            raise ValueError("api_key 是必填参数，不能为空")
+        if not base_url:
+            raise ValueError("base_url 是必填参数，不能为空")
 
-        self._base_url = base_url or _default_base_url()
+        self._api_key = api_key
+        self._base_url = base_url
         self._client = OpenAI(api_key=self._api_key, base_url=self._base_url)
 
     def chat(

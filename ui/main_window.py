@@ -10,6 +10,8 @@ from ui.pages.home_page import HomePage
 from ui.pages.excel_merger_page import ExcelMergerPage
 from ui.pages.time_generator_page import TimeGeneratorPage
 from ui.pages.directory_creator_page import DirectoryCreatorPage
+from ui.pages.document_reviewer_page import DocumentReviewerPage
+from ui.pages.settings_page import SettingsPage
 
 
 class MainWindow:
@@ -94,6 +96,14 @@ class MainWindow:
             "directory_creator",
             "📁 目录创建器",
             self._show_directory_creator_page,
+        )
+
+        # 文档审查按钮
+        self._create_nav_button(
+            nav_frame,
+            "document_reviewer",
+            "📄 文档审查",
+            self._show_document_reviewer_page,
         )
 
         # 分隔线
@@ -182,10 +192,19 @@ class MainWindow:
         self._show_page("directory_creator")
         self._update_nav_button("directory_creator")
 
+    def _show_document_reviewer_page(self):
+        """显示文档审查页面"""
+        if "document_reviewer" not in self.pages:
+            self.pages["document_reviewer"] = DocumentReviewerPage(self.content_frame)
+        self._show_page("document_reviewer")
+        self._update_nav_button("document_reviewer")
+
     def _show_settings_page(self):
         """显示设置页面"""
-        # TODO: 实现设置页面
-        self._show_info_dialog("设置", "设置功能正在开发中...")
+        if "settings" not in self.pages:
+            self.pages["settings"] = SettingsPage(self.content_frame)
+        self._show_page("settings")
+        self._update_nav_button("settings")
 
     def _show_about_page(self):
         """显示关于页面"""
@@ -198,6 +217,7 @@ class MainWindow:
         • Excel 文件合并
         • 时间点生成器（支持固定步长和随机步长模式）
         • 目录创建器（支持列表和树状模板模式）
+        • 文档审查（AI驱动的文档数据提取与对比）
         • 更多功能即将推出...
         
         开发者：nidhoggfgg
