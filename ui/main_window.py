@@ -8,6 +8,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from ui.pages.home_page import HomePage
 from ui.pages.excel_merger_page import ExcelMergerPage
+from ui.pages.excel_splitter_page import ExcelSplitterPage
 from ui.pages.time_generator_page import TimeGeneratorPage
 from ui.pages.directory_creator_page import DirectoryCreatorPage
 from ui.pages.document_reviewer_page import DocumentReviewerPage
@@ -83,6 +84,11 @@ class MainWindow:
         # Excel 合并按钮
         self._create_nav_button(
             nav_frame, "excel_merger", "📊 Excel 合并", self._show_excel_merger_page
+        )
+
+        # Excel 拆分按钮
+        self._create_nav_button(
+            nav_frame, "excel_splitter", "📑 Excel 拆分", self._show_excel_splitter_page
         )
 
         # 时间生成器按钮
@@ -177,6 +183,13 @@ class MainWindow:
             self.pages["excel_merger"] = ExcelMergerPage(self.content_frame)
         self._show_page("excel_merger")
         self._update_nav_button("excel_merger")
+
+    def _show_excel_splitter_page(self):
+        """显示 Excel 拆分页面"""
+        if "excel_splitter" not in self.pages:
+            self.pages["excel_splitter"] = ExcelSplitterPage(self.content_frame)
+        self._show_page("excel_splitter")
+        self._update_nav_button("excel_splitter")
 
     def _show_time_generator_page(self):
         """显示时间生成器页面"""

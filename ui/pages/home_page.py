@@ -75,6 +75,12 @@ class HomePage(ctk.CTkFrame):
                 "status": "可用",
             },
             {
+                "icon": "📑",
+                "title": "Excel 拆分",
+                "description": "按首列分组拆分为多个工作表，并在 H 列汇总金额",
+                "status": "可用",
+            },
+            {
                 "icon": "⏰",
                 "title": "时间生成器",
                 "description": "生成时间点序列，支持固定步长和随机步长模式",
