@@ -9,6 +9,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from ui.pages.home_page import HomePage
 from ui.pages.excel_merger_page import ExcelMergerPage
 from ui.pages.excel_splitter_page import ExcelSplitterPage
+from ui.pages.excel_time_filler_page import ExcelTimeFillerPage
 from ui.pages.time_generator_page import TimeGeneratorPage
 from ui.pages.directory_creator_page import DirectoryCreatorPage
 from ui.pages.document_reviewer_page import DocumentReviewerPage
@@ -91,9 +92,14 @@ class MainWindow:
             nav_frame, "excel_splitter", "📑 Excel 拆分", self._show_excel_splitter_page
         )
 
+        # Excel 时间填充按钮
+        self._create_nav_button(
+            nav_frame, "excel_time_filler", "⏰ Excel 时间填充", self._show_excel_time_filler_page
+        )
+
         # 时间生成器按钮
         self._create_nav_button(
-            nav_frame, "time_generator", "⏰ 时间生成器", self._show_time_generator_page
+            nav_frame, "time_generator", "🕐 时间生成器", self._show_time_generator_page
         )
 
         # 目录创建器按钮
@@ -191,6 +197,13 @@ class MainWindow:
         self._show_page("excel_splitter")
         self._update_nav_button("excel_splitter")
 
+    def _show_excel_time_filler_page(self):
+        """显示 Excel 时间填充页面"""
+        if "excel_time_filler" not in self.pages:
+            self.pages["excel_time_filler"] = ExcelTimeFillerPage(self.content_frame)
+        self._show_page("excel_time_filler")
+        self._update_nav_button("excel_time_filler")
+
     def _show_time_generator_page(self):
         """显示时间生成器页面"""
         if "time_generator" not in self.pages:
@@ -228,6 +241,8 @@ class MainWindow:
         
         功能特性：
         • Excel 文件合并
+        • Excel 按首列拆分
+        • Excel 时间填充（根据人员信息自动生成时间数据）
         • 时间点生成器（支持固定步长和随机步长模式）
         • 目录创建器（支持列表和树状模板模式）
         • 文档审查（AI驱动的文档数据提取与对比）

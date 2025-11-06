@@ -222,3 +222,43 @@ class TimeGenerator:
             "point_count": self.point_count,
             "mode": self.mode.value,
         }
+
+
+def generate_start_end_time(
+    start_time_range_start: datetime,
+    start_time_range_end: datetime,
+    end_time_range_start: datetime,
+    end_time_range_end: datetime,
+) -> tuple[datetime, datetime]:
+    """
+    分别在开始时间范围和结束时间范围内生成随机时间点。
+
+    参数：
+    - start_time_range_start/end: 开始时间的范围 [start_time_range_start, start_time_range_end]
+    - end_time_range_start/end: 结束时间的范围 [end_time_range_start, end_time_range_end]
+
+    返回 (start_time, end_time)，确保 start_time < end_time
+    """
+    if start_time_range_start >= start_time_range_end:
+        raise ValueError("start_time_range_start 必须早于 start_time_range_end")
+    if end_time_range_start >= end_time_range_end:
+        raise ValueError("end_time_range_start 必须早于 end_time_range_end")
+
+    # 在开始时间范围内随机选择开始时间
+    start_range_seconds = (
+        start_time_range_end - start_time_range_start
+    ).total_seconds()
+    start_offset = random.uniform(0, start_range_seconds)
+    start_time = start_time_range_start + timedelta(seconds=start_offset)
+
+    # 在结束时间范围内随机选择结束时间
+    end_range_seconds = (end_time_range_end - end_time_range_start).total_seconds()
+    end_offset = random.uniform(0, end_range_seconds)
+    end_time = end_time_range_start + timedelta(seconds=end_offset)
+
+    # 确保开始时间早于结束时间
+    if start_time >= end_time:
+        # 如果冲突，交换它们
+        start_time, end_time = end_time, start_time
+
+    return start_time, end_time

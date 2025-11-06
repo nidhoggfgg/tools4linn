@@ -33,7 +33,9 @@ class ExcelSplitter:
     ) -> Path:
         input_path = Path(input_file)
         if output_file is None:
-            output_path = input_path.with_name(f"{input_path.stem}_split{input_path.suffix}")
+            output_path = input_path.with_name(
+                f"{input_path.stem}_split{input_path.suffix}"
+            )
         else:
             output_path = Path(output_file)
 
@@ -42,6 +44,9 @@ class ExcelSplitter:
 
         wb = load_workbook(str(input_path))
         ws = wb.active
+
+        if ws is None:
+            raise ValueError("工作表不存在")
 
         if ws.max_column < amount_col:
             raise ValueError(
@@ -135,5 +140,3 @@ class ExcelSplitter:
         wb.save(str(output_path))
         self.logger.info(f"处理完成，输出文件: {output_path}")
         return output_path
-
-
