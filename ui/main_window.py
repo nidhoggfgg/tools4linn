@@ -13,6 +13,7 @@ from ui.pages.excel_time_filler_page import ExcelTimeFillerPage
 from ui.pages.time_generator_page import TimeGeneratorPage
 from ui.pages.directory_creator_page import DirectoryCreatorPage
 from ui.pages.document_reviewer_page import DocumentReviewerPage
+from ui.pages.file_extractor_page import FileExtractorPage
 from ui.pages.settings_page import SettingsPage
 
 
@@ -116,6 +117,14 @@ class MainWindow:
             "document_reviewer",
             "📄 文档审查",
             self._show_document_reviewer_page,
+        )
+
+        # 文件提取按钮
+        self._create_nav_button(
+            nav_frame,
+            "file_extractor",
+            "📂 文件提取",
+            self._show_file_extractor_page,
         )
 
         # 分隔线
@@ -225,6 +234,13 @@ class MainWindow:
         self._show_page("document_reviewer")
         self._update_nav_button("document_reviewer")
 
+    def _show_file_extractor_page(self):
+        """显示文件提取页面"""
+        if "file_extractor" not in self.pages:
+            self.pages["file_extractor"] = FileExtractorPage(self.content_frame)
+        self._show_page("file_extractor")
+        self._update_nav_button("file_extractor")
+
     def _show_settings_page(self):
         """显示设置页面"""
         if "settings" not in self.pages:
@@ -246,6 +262,7 @@ class MainWindow:
         • 时间点生成器（支持固定步长和随机步长模式）
         • 目录创建器（支持列表和树状模板模式）
         • 文档审查（AI驱动的文档数据提取与对比）
+        • 文件提取（从多层目录中提取符合条件的文件）
         • 更多功能即将推出...
         
         开发者：nidhoggfgg
