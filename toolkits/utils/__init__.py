@@ -1,4 +1,5 @@
 from .name_generator import NameGenerator
+from .name_anonymizer import anonymize_name, anonymize_names
 from .naming import (
     NamingStrategy,
     FileNameStrategy,
@@ -14,6 +15,8 @@ from .naming import (
 
 __all__ = [
     "NameGenerator",
+    "anonymize_name",
+    "anonymize_names",
     "NamingStrategy",
     "FileNameStrategy",
     "DirectoryNameStrategy",

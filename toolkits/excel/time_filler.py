@@ -10,7 +10,7 @@ from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 
 from ..time import generate_start_end_time
-from ..utils import NameGenerator
+from ..utils import NameGenerator, anonymize_names
 
 
 class ExcelTimeFiller:
@@ -37,6 +37,7 @@ class ExcelTimeFiller:
         data_start_row: int = 2,  # 数据从第几行开始（跳过标题）
         name_col: Optional[str | int] = None,  # 可选：名称列，如果提供则同时填充名称
         name_generator: Optional[NameGenerator] = None,  # 可选：名称生成器
+        use_anonymize: bool = False,  # 可选：是否对人名进行脱敏处理
         random_row_adjustment: tuple[int, int] = (0, 0),  # 随机行数调整范围
         output_file: Optional[Path | str] = None,
     ) -> Path:
@@ -56,6 +57,7 @@ class ExcelTimeFiller:
             data_start_row: 数据起始行（默认第2行，第1行为标题）
             name_col: 可选，名称列标识，如果提供则会在该列填充生成的名称
             name_generator: 可选，名称生成器实例，用于生成名称
+            use_anonymize: 可选，是否对人名进行脱敏处理（2字保留首字，3字+保留首尾）
             random_row_adjustment: 随机行数调整范围 (min, max)，负数表示删除行，正数表示增加行
             output_file: 输出文件路径，None 表示覆盖原文件
 
@@ -126,6 +128,11 @@ class ExcelTimeFiller:
                 names = name_generator.generate_names(names_needed)
                 random.shuffle(names)
                 names = names[:adjusted_data_rows]
+
+                # 如果启用脱敏，对名称进行脱敏处理
+                if use_anonymize:
+                    names = anonymize_names(names)
+                    self.logger.info("已对人名进行脱敏处理")
 
         # 填充时间和名称数据
         self._fill_data(

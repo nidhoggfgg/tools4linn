@@ -37,6 +37,8 @@ class ExcelTimeFillerPage(ctk.CTkFrame):
 
         # 是否使用名称列
         self.use_name_col = ctk.BooleanVar(value=False)
+        # 是否启用人名脱敏
+        self.use_anonymize = ctk.BooleanVar(value=False)
 
         # 控制器
         self.controller = ExcelTimeFillerController(self, self.logger)
@@ -206,6 +208,14 @@ class ExcelTimeFillerPage(ctk.CTkFrame):
             command=self._toggle_name_col,
         )
         toggle.pack(anchor="w", padx=20, pady=(0, 10))
+
+        # 是否启用人名脱敏
+        anonymize_toggle = ctk.CTkCheckBox(
+            frame,
+            text="启用人名脱敏 (2字保留首字，3字+保留首尾)",
+            variable=self.use_anonymize,
+        )
+        anonymize_toggle.pack(anchor="w", padx=20, pady=(0, 10))
 
         # 名称列配置
         self.name_config_frame = ctk.CTkFrame(frame, fg_color="transparent")
@@ -426,6 +436,7 @@ class ExcelTimeFillerPage(ctk.CTkFrame):
             "use_name_col": self.use_name_col.get(),
             "name_col": self.name_col.get() if self.use_name_col.get() else None,
             "names_file": self.names_file.get() if self.use_name_col.get() else None,
+            "use_anonymize": self.use_anonymize.get(),
             "output_dir": self.output_dir.get() if not self.auto_output.get() else None,
         }
 

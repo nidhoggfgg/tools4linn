@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Optional, Callable, Dict, Any
 
 from toolkits.excel import ExcelTimeFiller, ExcelHumanLoader
-from toolkits.utils import NameGenerator
+from toolkits.utils import NameGenerator, anonymize_names
 
 
 class ExcelTimeFillerController:
@@ -137,12 +137,15 @@ class ExcelTimeFillerController:
 
             # 加载名称生成器（如果需要）
             name_generator = None
+            use_anonymize = config.get("use_anonymize", False)
             if config.get("use_name_col") and config.get("names_file"):
                 self._update_progress(0.3, "加载名称文件...")
                 name_generator = NameGenerator(names_file=config["names_file"])
-                self._log_message(
-                    f"加载了 {name_generator.get_name_count()} 个名称"
-                )
+                name_count = name_generator.get_name_count()
+                if use_anonymize:
+                    self._log_message(f"加载了 {name_count} 个名称（已启用人名脱敏）")
+                else:
+                    self._log_message(f"加载了 {name_count} 个名称")
 
             # 准备输出目录
             output_dir = self._prepare_output_dir(config)
@@ -188,6 +191,7 @@ class ExcelTimeFillerController:
                     data_start_row=config.get("data_start_row", 2),
                     name_col=config.get("name_col"),
                     name_generator=name_generator,
+                    use_anonymize=use_anonymize,
                     random_row_adjustment=(
                         config.get("row_adjust_min", -1),
                         config.get("row_adjust_max", 10),
