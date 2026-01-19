@@ -14,6 +14,7 @@ from ui.pages.time_generator_page import TimeGeneratorPage
 from ui.pages.directory_creator_page import DirectoryCreatorPage
 from ui.pages.document_reviewer_page import DocumentReviewerPage
 from ui.pages.file_extractor_page import FileExtractorPage
+from ui.pages.file_deleter_page import FileDeleterPage
 from ui.pages.settings_page import SettingsPage
 
 
@@ -125,6 +126,14 @@ class MainWindow:
             "file_extractor",
             "📂 文件提取",
             self._show_file_extractor_page,
+        )
+
+        # 文件删除按钮
+        self._create_nav_button(
+            nav_frame,
+            "file_deleter",
+            "🗑️ 批量文件删除",
+            self._show_file_deleter_page,
         )
 
         # 分隔线
@@ -241,6 +250,13 @@ class MainWindow:
         self._show_page("file_extractor")
         self._update_nav_button("file_extractor")
 
+    def _show_file_deleter_page(self):
+        """显示文件删除页面"""
+        if "file_deleter" not in self.pages:
+            self.pages["file_deleter"] = FileDeleterPage(self.content_frame)
+        self._show_page("file_deleter")
+        self._update_nav_button("file_deleter")
+
     def _show_settings_page(self):
         """显示设置页面"""
         if "settings" not in self.pages:
@@ -263,6 +279,7 @@ class MainWindow:
         • 目录创建器（支持列表和树状模板模式）
         • 文档审查（AI驱动的文档数据提取与对比）
         • 文件提取（从多层目录中提取符合条件的文件）
+        • 批量文件删除（支持多种匹配模式删除文件，删除前确认）
         • 更多功能即将推出...
         
         开发者：nidhoggfgg
