@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import List, Optional, Callable, Dict, Tuple, Any
 from abc import ABC, abstractmethod
 import logging
+import platform
+import subprocess
 
 # 可用性检查
 try:
@@ -14,6 +16,9 @@ try:
     PILLOW_AVAILABLE = True
 except ImportError:
     PILLOW_AVAILABLE = False
+
+# Windows 特定转换器可用性检查
+WINDOWS_DOC_CONVERTER_AVAILABLE = platform.system() == "Windows"
 
 
 class ConversionResult:
@@ -196,6 +201,207 @@ class ImageConverter(BaseConverter):
             )
 
 
+class WindowsDocumentConverter(BaseConverter):
+    """Windows 文档转换器 (Word/PPTX 转 PDF)"""
+
+    # 支持的格式映射
+    FORMAT_EXTENSIONS = {
+        "DOCX": "docx",
+        "DOC": "doc",
+        "PPTX": "pptx",
+        "PPT": "ppt",
+        "PDF": "pdf",
+    }
+
+    def __init__(self, logger: Optional[logging.Logger] = None):
+        super().__init__(logger)
+
+        if not WINDOWS_DOC_CONVERTER_AVAILABLE:
+            raise ImportError("Windows document converter only available on Windows")
+
+        # Word 支持的输入/输出格式
+        self.word_input_formats = ["DOCX", "DOC"]
+        self.word_output_formats = ["PDF"]
+
+        # PowerPoint 支持的输入/输出格式
+        self.ppt_input_formats = ["PPTX", "PPT"]
+        self.ppt_output_formats = ["PDF"]
+
+        self.supported_input_formats = (
+            self.word_input_formats + self.ppt_input_formats
+        )
+        self.supported_output_formats = ["PDF"]
+
+    def is_supported(self, input_format: str, output_format: str) -> bool:
+        """检查是否支持该转换"""
+        input_format = input_format.upper().lstrip(".")
+        output_format = output_format.upper().lstrip(".")
+
+        # 仅支持转换为 PDF
+        if output_format != "PDF":
+            return False
+
+        return input_format in self.supported_input_formats
+
+    def convert(
+        self,
+        input_path: Path,
+        output_path: Path,
+        delete_original: bool = False,
+        **options,
+    ) -> ConversionResult:
+        """
+        转换文档格式为 PDF
+
+        Args:
+            input_path: 输入文档路径
+            output_path: 输出 PDF 路径
+            delete_original: 是否删除原文件
+            **options: 其他选项
+        """
+        try:
+            if not input_path.exists():
+                return ConversionResult(
+                    success=False,
+                    input_path=input_path,
+                    output_path=None,
+                    error_message=f"输入文件不存在: {input_path}",
+                )
+
+            input_format = input_path.suffix.lstrip(".").upper()
+
+            # 确保输出目录存在
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # 根据文件类型选择转换方法
+            if input_format in self.word_input_formats:
+                success = self._convert_word_to_pdf(input_path, output_path)
+            elif input_format in self.ppt_input_formats:
+                success = self._convert_ppt_to_pdf(input_path, output_path)
+            else:
+                return ConversionResult(
+                    success=False,
+                    input_path=input_path,
+                    output_path=None,
+                    error_message=f"不支持的输入格式: {input_format}",
+                )
+
+            if not success:
+                return ConversionResult(
+                    success=False,
+                    input_path=input_path,
+                    output_path=None,
+                    error_message="文档转换失败",
+                )
+
+            # 删除原文件（如果要求）
+            if delete_original:
+                try:
+                    input_path.unlink()
+                    self.logger.info(f"已删除原文件: {input_path}")
+                except Exception as e:
+                    self.logger.warning(f"删除原文件失败: {e}")
+
+            self.logger.info(f"文档转换成功: {input_path} -> {output_path}")
+
+            return ConversionResult(
+                success=True, input_path=input_path, output_path=output_path
+            )
+
+        except Exception as e:
+            error_msg = f"文档转换失败: {str(e)}"
+            self.logger.error(f"{error_msg} - 文件: {input_path}")
+            return ConversionResult(
+                success=False, input_path=input_path, output_path=None, error_message=error_msg
+            )
+
+    def _convert_word_to_pdf(self, input_path: Path, output_path: Path) -> bool:
+        """使用 Word COM 接口转换文档为 PDF"""
+        try:
+            import win32com.client
+
+            # 创建 Word 应用程序对象
+            word = win32com.client.Dispatch("Word.Application")
+            try:
+                word.Visible = False
+            except Exception:
+                # 某些系统不允许隐藏窗口，忽略此错误
+                self.logger.debug("无法隐藏 Word 窗口，将继续转换")
+
+            try:
+                # 打开文档
+                doc = word.Documents.Open(str(input_path.absolute()))
+
+                # 保存为 PDF (16 = wdFormatPDF)
+                doc.SaveAs(str(output_path.absolute()), FileFormat=16)
+
+                # 关闭文档
+                doc.Close(SaveChanges=0)
+                return True
+
+            except Exception as e:
+                # 确保文档被关闭
+                try:
+                    doc.Close(SaveChanges=0)
+                except:
+                    pass
+                raise
+
+            finally:
+                # 退出 Word 应用程序
+                try:
+                    word.Quit(SaveChanges=0)
+                except:
+                    pass
+
+        except Exception as e:
+            self.logger.error(f"Word 转 PDF 失败: {e}")
+            return False
+
+    def _convert_ppt_to_pdf(self, input_path: Path, output_path: Path) -> bool:
+        """使用 PowerPoint COM 接口转换演示文稿为 PDF"""
+        try:
+            import win32com.client
+
+            # 创建 PowerPoint 应用程序对象
+            ppt = win32com.client.Dispatch("PowerPoint.Application")
+            try:
+                ppt.Visible = False
+            except Exception:
+                # 某些系统不允许隐藏窗口，忽略此错误
+                self.logger.debug("无法隐藏 PowerPoint 窗口，将继续转换")
+
+            try:
+                # 打开演示文稿
+                presentation = ppt.Presentations.Open(str(input_path.absolute()))
+
+                # 保存为 PDF (32 = ppSaveAsPDF)
+                presentation.SaveAs(str(output_path.absolute()), 32)
+
+                # 关闭演示文稿
+                presentation.Close()
+                return True
+
+            except Exception as e:
+                # 确保演示文稿被关闭
+                try:
+                    presentation.Close()
+                except:
+                    pass
+                raise
+
+            finally:
+                # 退出 PowerPoint 应用程序
+                try:
+                    ppt.Quit()
+                except:
+                    pass
+
+        except Exception as e:
+            self.logger.error(f"PowerPoint 转 PDF 失败: {e}")
+            return False
+
+
 class ConverterManager:
     """转换器管理器 - 负责选择合适的转换器并执行批量转换"""
 
@@ -208,11 +414,19 @@ class ConverterManager:
 
     def _register_converters(self):
         """注册所有可用的转换器"""
+        # 注册图片转换器
         try:
             self.converters.append(ImageConverter(self.logger))
             self.logger.info("图片转换器已注册")
         except ImportError as e:
             self.logger.warning(f"图片转换器不可用: {e}")
+
+        # 注册 Windows 文档转换器
+        try:
+            self.converters.append(WindowsDocumentConverter(self.logger))
+            self.logger.info("Windows 文档转换器已注册")
+        except ImportError as e:
+            self.logger.info(f"Windows 文档转换器不可用 (仅支持 Windows): {e}")
 
     def get_supported_conversions(self) -> Dict[str, List[str]]:
         """

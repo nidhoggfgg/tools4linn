@@ -4,7 +4,7 @@
 """
 
 import customtkinter as ctk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 import logging
 from typing import List, Optional
 from pathlib import Path
@@ -25,13 +25,11 @@ class FileConverterPage(ctk.CTkFrame):
         # 状态变量
         self.input_dir = ctk.StringVar()
         self.output_dir = ctk.StringVar()
-        self.match_mode = ctk.StringVar(value="扩展名匹配")
+        self.match_mode = ctk.StringVar(value="关键字匹配")
         self.match_pattern = ctk.StringVar()
         self.recursive_search = ctk.BooleanVar(value=True)
         self.output_mode = ctk.StringVar(value="same_dir")
         self.output_format = ctk.StringVar(value="JPEG")
-        self.quality = ctk.IntVar(value=95)
-        self.delete_original = ctk.BooleanVar(value=False)
 
         # 预览结果
         self.preview_files: List[Path] = []
@@ -74,7 +72,6 @@ class FileConverterPage(ctk.CTkFrame):
         self._create_directory_section()
         self._create_match_mode_section()
         self._create_conversion_section()
-        self._create_options_section()
         self._create_control_section()
         self._create_progress_section()
         self._create_log_section()
@@ -86,14 +83,14 @@ class FileConverterPage(ctk.CTkFrame):
 
         title_label = ctk.CTkLabel(
             header_frame,
-            text="🔄 批量图片格式转换工具",
+            text="🔄 批量文件格式转换工具",
             font=ctk.CTkFont(size=28, weight="bold"),
         )
         title_label.pack(pady=20)
 
         desc_label = ctk.CTkLabel(
             header_frame,
-            text="支持多种图片格式之间的批量转换，提供灵活的文件匹配和输出选项",
+            text="支持图片、Word、PPT 等多种格式之间的批量转换，提供灵活的文件匹配和输出选项",
             font=ctk.CTkFont(size=14),
             text_color=("gray10", "gray90"),
         )
@@ -102,7 +99,7 @@ class FileConverterPage(ctk.CTkFrame):
         # 支持格式说明
         formats_label = ctk.CTkLabel(
             header_frame,
-            text="支持格式: PNG, JPEG, WEBP, BMP, TIFF, GIF",
+            text="支持格式: PNG, JPEG, WEBP, BMP, TIFF, GIF (Word/PPT 转 PDF 仅限 Windows)",
             font=ctk.CTkFont(size=12),
             text_color=("gray20", "gray80"),
         )
@@ -313,76 +310,6 @@ class FileConverterPage(ctk.CTkFrame):
         )
         self.output_dir_button.pack(side="right")
 
-    def _create_options_section(self):
-        """创建转换选项区域"""
-        options_frame = ctk.CTkFrame(self.scrollable_frame)
-        options_frame.pack(fill="x", pady=(0, 20))
-
-        # 标题
-        options_title = ctk.CTkLabel(
-            options_frame, text="⚙️ 转换选项", font=ctk.CTkFont(size=18, weight="bold")
-        )
-        options_title.pack(pady=(20, 15), anchor="w", padx=20)
-
-        # 质量选项
-        self.quality_frame = ctk.CTkFrame(options_frame, fg_color="transparent")
-        self.quality_frame.pack(fill="x", padx=20, pady=(0, 10))
-
-        quality_label = ctk.CTkLabel(
-            self.quality_frame, text="图片质量:", font=ctk.CTkFont(size=14)
-        )
-        quality_label.pack(anchor="w", pady=(0, 5))
-
-        quality_control_frame = ctk.CTkFrame(self.quality_frame, fg_color="transparent")
-        quality_control_frame.pack(fill="x")
-
-        self.quality_slider = ctk.CTkSlider(
-            quality_control_frame,
-            from_=1,
-            to=100,
-            variable=self.quality,
-            width=200,
-            height=20,
-        )
-        self.quality_slider.pack(side="left", padx=(0, 10))
-
-        self.quality_value_label = ctk.CTkLabel(
-            quality_control_frame,
-            textvariable=self.quality,
-            font=ctk.CTkFont(size=13, weight="bold"),
-            width=30,
-        )
-        self.quality_value_label.pack(side="left", padx=(0, 10))
-
-        quality_desc_label = ctk.CTkLabel(
-            quality_control_frame,
-            text="1-100，值越大质量越高",
-            font=ctk.CTkFont(size=11),
-            text_color=("gray20", "gray80"),
-        )
-        quality_desc_label.pack(side="left")
-
-        # 删除原文件选项
-        delete_frame = ctk.CTkFrame(options_frame, fg_color="transparent")
-        delete_frame.pack(fill="x", padx=20, pady=(0, 15))
-
-        self.delete_checkbox = ctk.CTkCheckBox(
-            delete_frame,
-            text="删除原文件（谨慎使用）",
-            variable=self.delete_original,
-            font=ctk.CTkFont(size=13),
-        )
-        self.delete_checkbox.pack(anchor="w")
-
-        # 警告标签
-        warning_label = ctk.CTkLabel(
-            delete_frame,
-            text="⚠️ 删除后无法恢复，建议先备份重要文件",
-            font=ctk.CTkFont(size=11),
-            text_color=("red", "red"),
-        )
-        warning_label.pack(anchor="w", padx=(25, 0))
-
     def _create_control_section(self):
         """创建控制按钮区域"""
         control_frame = ctk.CTkFrame(self.scrollable_frame)
@@ -397,16 +324,6 @@ class FileConverterPage(ctk.CTkFrame):
         # 按钮容器
         button_frame = ctk.CTkFrame(control_frame, fg_color="transparent")
         button_frame.pack(fill="x", padx=20, pady=(0, 15))
-
-        self.preview_button = ctk.CTkButton(
-            button_frame,
-            text="🔍 预览文件",
-            command=self._preview_files,
-            height=40,
-            width=150,
-            font=ctk.CTkFont(size=14, weight="bold"),
-        )
-        self.preview_button.pack(side="left", padx=(0, 10))
 
         self.convert_button = ctk.CTkButton(
             button_frame,
@@ -516,13 +433,7 @@ class FileConverterPage(ctk.CTkFrame):
 
     def _on_output_format_change(self, choice: str):
         """输出格式改变事件"""
-        # 根据输出格式显示/隐藏相关选项
-        if choice.upper() in ["JPEG", "JPG", "WEBP"]:
-            # 显示质量选项
-            self.quality_frame.pack(fill="x", padx=20, pady=(0, 10))
-        else:
-            # 隐藏质量选项
-            self.quality_frame.pack_forget()
+        pass  # 不再需要根据格式动态显示选项
 
     def _on_output_mode_change(self):
         """输出模式改变事件"""
@@ -537,11 +448,11 @@ class FileConverterPage(ctk.CTkFrame):
         """预览文件"""
         # 验证输入
         if not self.input_dir.get():
-            self._log_message("❌ 请先选择要搜索的目录")
+            self._on_log_message("❌ 请先选择要搜索的目录")
             return
 
         if not self.match_pattern.get():
-            self._log_message("❌ 请输入匹配条件")
+            self._on_log_message("❌ 请输入匹配条件")
             return
 
         # 查找文件
@@ -554,35 +465,49 @@ class FileConverterPage(ctk.CTkFrame):
 
         if success:
             self.preview_files = files
-            self._log_message(f"✅ {message}")
+            self._on_log_message(f"✅ {message}")
         else:
-            self._log_message(f"❌ {message}")
+            self._on_log_message(f"❌ {message}")
 
     def _start_conversion(self):
         """开始转换"""
         # 验证输入
-        if not self.preview_files:
-            self._log_message('❌ 请先点击"预览文件"查看要转换的文件')
+        if not self.input_dir.get():
+            self._on_log_message("❌ 请先选择要搜索的目录")
+            return
+
+        if not self.match_pattern.get():
+            self._on_log_message("❌ 请输入匹配条件")
             return
 
         if self.output_mode.get() == "unified" and not self.output_dir.get():
-            self._log_message("❌ 请选择输出目录")
+            self._on_log_message("❌ 请选择输出目录")
             return
 
         # 禁用按钮
         self.convert_button.configure(state="disabled")
-        self.preview_button.configure(state="disabled")
+
+        # 如果没有预览文件，先查找文件
+        if not self.preview_files:
+            success, message, files = self.controller.find_files(
+                root_dir=self.input_dir.get(),
+                match_mode=self.match_mode.get(),
+                pattern=self.match_pattern.get(),
+                recursive=self.recursive_search.get(),
+            )
+
+            if not success:
+                self._on_log_message(f"❌ {message}")
+                self.convert_button.configure(state="normal")
+                return
+
+            self.preview_files = files
+            self._on_log_message(f"✅ 找到 {len(files)} 个文件，开始转换...")
 
         # 准备转换选项
-        conversion_options = {}
-        output_format = self.output_format.get().upper()
-
-        # 添加质量参数（仅对 JPEG/WEBP 有效）
-        if output_format in ["JPEG", "JPG", "WEBP"]:
-            conversion_options["quality"] = self.quality.get()
-
-        # 添加删除原文件选项
-        conversion_options["delete_original"] = self.delete_original.get()
+        conversion_options = {
+            "delete_original": False
+        }
 
         # 执行转换
         success, message = self.controller.convert_files(
@@ -593,14 +518,20 @@ class FileConverterPage(ctk.CTkFrame):
             conversion_options=conversion_options,
         )
 
-        if success:
-            self._log_message(f"✅ {message}")
-        else:
-            self._log_message(f"❌ {message}")
-
         # 重新启用按钮
         self.convert_button.configure(state="normal")
-        self.preview_button.configure(state="normal")
+
+        # 显示弹窗提醒用户
+        if success:
+            messagebox.showinfo("转换完成", message)
+        else:
+            messagebox.showerror("转换失败", message)
+
+        # 在日志中也显示结果
+        if success:
+            self._on_log_message(f"✅ {message}")
+        else:
+            self._on_log_message(f"❌ {message}")
 
     def _on_progress_update(self, progress: float, message: str):
         """更新进度"""
@@ -616,7 +547,11 @@ class FileConverterPage(ctk.CTkFrame):
 
     def _on_conversion_complete(self, success: bool, message: str):
         """转换完成回调"""
-        pass
+        # 显示弹窗提醒用户
+        if success:
+            messagebox.showinfo("转换完成", message)
+        else:
+            messagebox.showerror("转换失败", message)
 
     def _clear_log(self):
         """清空日志"""

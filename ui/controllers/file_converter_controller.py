@@ -83,21 +83,7 @@ class FileConverterController:
             选项字典
         """
         options = {}
-
-        # 图片转换选项
-        input_fmt = input_format.upper().lstrip(".")
-        output_fmt = output_format.upper().lstrip(".")
-
-        if output_fmt in ["JPEG", "JPG", "WEBP"]:
-            options["quality"] = {
-                "type": "int",
-                "label": "图片质量",
-                "default": 95,
-                "min": 1,
-                "max": 100,
-                "description": "1-100，值越大质量越高",
-            }
-
+        # 目前不需要格式特定的转换选项
         return options
 
     def find_files(

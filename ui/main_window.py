@@ -133,7 +133,7 @@ class MainWindow:
         self._create_nav_button(
             nav_frame,
             "file_deleter",
-            "🗑️ 批量文件删除",
+            "🚮 批量文件删除",
             self._show_file_deleter_page,
         )
 
