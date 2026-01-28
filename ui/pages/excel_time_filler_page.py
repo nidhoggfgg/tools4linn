@@ -30,6 +30,7 @@ class ExcelTimeFillerPage(ctk.CTkFrame):
         self.name_col = ctk.StringVar(value="")
 
         # 其他配置
+        self.year = ctk.IntVar(value=2025)
         self.data_start_row = ctk.IntVar(value=2)
         self.time_offset_minutes = ctk.IntVar(value=15)
         self.row_adjust_min = ctk.IntVar(value=-1)
@@ -149,6 +150,23 @@ class ExcelTimeFillerPage(ctk.CTkFrame):
 
         grid_frame = ctk.CTkFrame(frame, fg_color="transparent")
         grid_frame.pack(fill="x", padx=20, pady=(0, 20))
+
+        # 年份设置
+        row_year = ctk.CTkFrame(grid_frame, fg_color="transparent")
+        row_year.pack(fill="x", pady=(0, 10))
+
+        label_year = ctk.CTkLabel(row_year, text="年份:", width=150)
+        label_year.pack(side="left")
+        entry_year = ctk.CTkEntry(row_year, textvariable=self.year, width=100)
+        entry_year.pack(side="left", padx=(10, 0))
+
+        info_year = ctk.CTkLabel(
+            row_year,
+            text="(用于生成时间数据)",
+            font=ctk.CTkFont(size=11),
+            text_color=("gray40", "gray60"),
+        )
+        info_year.pack(side="left", padx=(10, 0))
 
         # 时间偏移范围
         row1 = ctk.CTkFrame(grid_frame, fg_color="transparent")
@@ -424,6 +442,7 @@ class ExcelTimeFillerPage(ctk.CTkFrame):
 
         # 准备配置
         config = {
+            "year": self.year.get(),
             "template_file": self.template_file.get(),
             "human_file": self.human_file.get(),
             "start_time_col": self.start_time_col.get(),

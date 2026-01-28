@@ -79,6 +79,10 @@ class ExcelTimeFillerController:
 
         # 验证数字配置
         try:
+            year = int(config.get("year", 2025))
+            if year < 1900 or year > 2100:
+                return False, "年份必须在 1900 到 2100 之间"
+
             data_start_row = int(config.get("data_start_row", 2))
             if data_start_row < 1:
                 return False, "数据起始行必须大于等于 1"
@@ -156,6 +160,9 @@ class ExcelTimeFillerController:
 
             # 处理每个人员信息
             total = len(humans)
+            # 获取年份配置
+            year = config.get("year", 2025)
+
             for idx, item in enumerate(humans):
                 progress = 0.3 + (0.6 * (idx / total))
                 self._update_progress(
@@ -164,13 +171,13 @@ class ExcelTimeFillerController:
 
                 # 计算时间范围
                 start_time = datetime.fromisoformat(
-                    f"2025-{item['date']} {item['start_time']}:00"
+                    f"{year}-{item['date']} {item['start_time']}:00"
                 )
                 start_time_range_start = start_time - timedelta(minutes=time_offset)
                 start_time_range_end = start_time + timedelta(minutes=time_offset)
 
                 end_time = datetime.fromisoformat(
-                    f"2025-{item['date']} {item['end_time']}:00"
+                    f"{year}-{item['date']} {item['end_time']}:00"
                 )
                 end_time_range_start = end_time - timedelta(minutes=time_offset)
                 end_time_range_end = end_time + timedelta(minutes=time_offset)
