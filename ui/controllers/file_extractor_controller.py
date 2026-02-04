@@ -68,6 +68,7 @@ class FileExtractorController:
         naming_mode: str = "保持原文件名",
         custom_prefix: str = "",
         custom_suffix: str = "",
+        extract_target: str = "文件",
     ):
         """开始提取文件"""
         if self.processing:
@@ -118,6 +119,13 @@ class FileExtractorController:
             }
             naming_mode = naming_mode_map.get(naming_mode, "original")
 
+            # 映射提取目标
+            extract_target_map = {
+                "文件": "files",
+                "文件夹": "dirs",
+            }
+            extract_target_value = extract_target_map.get(extract_target, "files")
+
             # 创建提取器
             extractor = FileExtractor(
                 logger=self.logger,
@@ -129,9 +137,11 @@ class FileExtractorController:
                 naming_mode=naming_mode,
                 custom_prefix=custom_prefix,
                 custom_suffix=custom_suffix,
+                extract_target=extract_target_value,
             )
 
-            self._update_progress(0.2, "开始提取文件...")
+            target_label = "文件夹" if extract_target_value == "dirs" else "文件"
+            self._update_progress(0.2, f"开始提取{target_label}...")
 
             # 提取文件
             result = extractor.extract_files()
@@ -139,10 +149,10 @@ class FileExtractorController:
             # 构建结果消息
             message = (
                 f"提取完成!\n"
-                f"总计: {result['total_count']} 个文件\n"
-                f"成功: {result['success_count']} 个文件\n"
-                f"跳过: {result['skipped_count']} 个文件\n"
-                f"失败: {result['error_count']} 个文件"
+                f"总计: {result['total_count']} 个{target_label}\n"
+                f"成功: {result['success_count']} 个{target_label}\n"
+                f"跳过: {result['skipped_count']} 个{target_label}\n"
+                f"失败: {result['error_count']} 个{target_label}"
             )
 
             self._update_progress(1.0, "提取完成!")

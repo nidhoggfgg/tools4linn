@@ -22,6 +22,7 @@ class FileExtractor:
         naming_mode: str = "original",
         custom_prefix: str = "",
         custom_suffix: str = "",
+        extract_target: str = "files",
     ):
         """
         初始化文件提取器
@@ -44,6 +45,9 @@ class FileExtractor:
                 - "use_first_dir": 使用第一层目录名作为文件名（保留扩展名）
             custom_prefix: 自定义前缀（当 naming_mode="prefix" 时使用）
             custom_suffix: 自定义后缀（当 naming_mode="suffix" 时使用）
+            extract_target: 提取目标类型
+                - "files": 提取文件
+                - "dirs": 提取文件夹
         """
         self.logger = logger
         self.input_dir = input_dir
@@ -54,6 +58,7 @@ class FileExtractor:
         self.naming_mode = naming_mode
         self.custom_prefix = custom_prefix
         self.custom_suffix = custom_suffix
+        self.extract_target = extract_target
 
         # 用于序号模式的文件计数器
         self.file_counters = defaultdict(int)
@@ -102,6 +107,35 @@ class FileExtractor:
 
         return filtered_files
 
+    def find_all_directories(self, input_dir: Path) -> List[Path]:
+        """
+        查找目录中所有符合条件的子目录
+
+        Args:
+            input_dir: 要搜索的目录
+
+        Returns:
+            符合条件的目录路径列表
+        """
+        if not input_dir.exists():
+            self.logger.error(f"输入目录不存在: {input_dir}")
+            return []
+
+        if not input_dir.is_dir():
+            self.logger.error(f"输入路径不是目录: {input_dir}")
+            return []
+
+        all_dirs = [p for p in input_dir.rglob("*") if p.is_dir()]
+
+        filtered_dirs = []
+        for dir_path in all_dirs:
+            if self.file_filter_strategy is None:
+                filtered_dirs.append(dir_path)
+            elif self.file_filter_strategy.should_include(dir_path):
+                filtered_dirs.append(dir_path)
+
+        return filtered_dirs
+
     def extract_files(self, extensions: Optional[List[str]] = None) -> dict:
         """
         提取文件到输出目录
@@ -119,10 +153,21 @@ class FileExtractor:
         # 创建输出目录
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        # 查找所有符合条件的文件
-        all_files = self.find_all_files(self.input_dir, extensions)
+        # 查找所有符合条件的目标
+        extract_target = self._normalize_extract_target()
+        if extract_target == "dirs":
+            all_targets = self.find_all_directories(self.input_dir)
+        else:
+            all_targets = self.find_all_files(self.input_dir, extensions)
 
-        self.logger.info(f"找到 {len(all_files)} 个文件")
+        # 排除输出目录自身及其内容（避免递归复制）
+        all_targets = [
+            p for p in all_targets if not self._is_within_output_dir(p)
+        ]
+
+        self.logger.info(
+            f"找到 {len(all_targets)} 个{self._get_extract_target_name(extract_target)}"
+        )
         self.logger.info(f"组织方式: {self._get_organize_mode_name()}")
         self.logger.info(f"命名模式: {self._get_naming_mode_name()}")
 
@@ -130,40 +175,49 @@ class FileExtractor:
         skipped_count = 0
         error_count = 0
 
-        for file_path in all_files:
+        for target_path in all_targets:
             try:
                 # 计算目标文件路径
-                dest_path = self._get_destination_path(file_path)
+                dest_path = self._get_destination_path(target_path)
 
                 # 应用命名模式
-                dest_path = self._apply_naming_mode(dest_path, file_path)
+                dest_path = self._apply_naming_mode(dest_path, target_path)
 
                 # 检查文件是否已存在
                 if dest_path.exists():
                     if self.overwrite:
-                        self.logger.warning(f"覆盖已存在的文件: {dest_path}")
+                        if dest_path.is_dir():
+                            shutil.rmtree(dest_path)
+                        else:
+                            dest_path.unlink()
+                        self.logger.warning(f"覆盖已存在的目标: {dest_path}")
                     else:
-                        self.logger.info(f"跳过已存在的文件: {dest_path}")
+                        self.logger.info(f"跳过已存在的目标: {dest_path}")
                         skipped_count += 1
                         continue
 
                 # 创建目标目录（如果需要）
                 dest_path.parent.mkdir(parents=True, exist_ok=True)
 
-                # 复制文件
-                shutil.copy2(file_path, dest_path)
-                self.logger.info(f"已复制: {file_path.relative_to(self.input_dir)}")
+                # 复制文件/目录
+                if target_path.is_dir():
+                    shutil.copytree(target_path, dest_path, copy_function=shutil.copy2)
+                else:
+                    shutil.copy2(target_path, dest_path)
+                self.logger.info(
+                    f"已复制: {target_path.relative_to(self.input_dir)}"
+                )
                 success_count += 1
 
             except Exception as e:
-                self.logger.error(f"复制文件失败 {file_path}: {e}")
+                self.logger.error(f"复制失败 {target_path}: {e}")
                 error_count += 1
 
         result = {
             "success_count": success_count,
             "skipped_count": skipped_count,
             "error_count": error_count,
-            "total_count": len(all_files),
+            "total_count": len(all_targets),
         }
 
         self.logger.info(
@@ -227,6 +281,27 @@ class FileExtractor:
             "use_first_dir": "使用第一层目录名",
         }
         return naming_mode_names.get(self.naming_mode, "未知")
+
+    def _normalize_extract_target(self) -> str:
+        """规范化提取目标类型"""
+        if self.extract_target not in ("files", "dirs"):
+            self.logger.warning(f"未知的提取目标类型: {self.extract_target}, 默认使用 files")
+            return "files"
+        return self.extract_target
+
+    def _get_extract_target_name(self, extract_target: str) -> str:
+        """获取提取目标的名称"""
+        if extract_target == "dirs":
+            return "文件夹"
+        return "文件"
+
+    def _is_within_output_dir(self, path: Path) -> bool:
+        """判断路径是否位于输出目录内"""
+        try:
+            path.relative_to(self.output_dir)
+            return True
+        except ValueError:
+            return False
 
     def _apply_naming_mode(self, dest_path: Path, file_path: Path) -> Path:
         """

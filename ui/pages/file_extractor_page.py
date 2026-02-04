@@ -23,6 +23,7 @@ class FileExtractorPage(ctk.CTkFrame):
         # 状态变量
         self.input_dir = ctk.StringVar()
         self.output_dir = ctk.StringVar()
+        self.extract_target = ctk.StringVar(value="文件")
         self.organize_mode = ctk.StringVar(value="按第一层目录分组")
         self.naming_mode = ctk.StringVar(value="保持原文件名")
         self.custom_prefix = ctk.StringVar()
@@ -181,6 +182,32 @@ class FileExtractorPage(ctk.CTkFrame):
         )
         options_title.pack(pady=(20, 15), anchor="w", padx=20)
 
+        # 提取对象选择
+        target_frame = ctk.CTkFrame(options_frame, fg_color="transparent")
+        target_frame.pack(fill="x", padx=20, pady=(0, 15))
+
+        target_label = ctk.CTkLabel(
+            target_frame, text="提取对象:", font=ctk.CTkFont(size=14)
+        )
+        target_label.pack(anchor="w", pady=(0, 5))
+
+        target_desc_label = ctk.CTkLabel(
+            target_frame,
+            text="选择要提取文件还是文件夹",
+            font=ctk.CTkFont(size=11),
+            text_color=("gray10", "gray90"),
+        )
+        target_desc_label.pack(anchor="w", pady=(0, 5))
+
+        self.target_menu = ctk.CTkOptionMenu(
+            target_frame,
+            values=["文件", "文件夹"],
+            variable=self.extract_target,
+            width=200,
+            height=35,
+        )
+        self.target_menu.pack(anchor="w")
+
         # 文件组织方式选择
         organize_frame = ctk.CTkFrame(options_frame, fg_color="transparent")
         organize_frame.pack(fill="x", padx=20, pady=(0, 15))
@@ -212,7 +239,7 @@ class FileExtractorPage(ctk.CTkFrame):
         filter_frame.pack(fill="x", padx=20, pady=(0, 15))
 
         filter_title = ctk.CTkLabel(
-            filter_frame, text="文件过滤（必选）:", font=ctk.CTkFont(size=14)
+            filter_frame, text="过滤条件（必选）:", font=ctk.CTkFont(size=14)
         )
         filter_title.pack(anchor="w", pady=(0, 5))
 
@@ -547,6 +574,7 @@ class FileExtractorPage(ctk.CTkFrame):
             naming_mode=naming_mode,
             custom_prefix=custom_prefix,
             custom_suffix=custom_suffix,
+            extract_target=self.extract_target.get(),
         )
 
     def _on_progress_update(self, progress: float, message: str):
